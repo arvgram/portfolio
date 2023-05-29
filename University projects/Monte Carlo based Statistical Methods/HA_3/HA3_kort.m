@@ -1,0 +1,67 @@
+clear
+load coal_mine_disasters
+f = figure();
+f.Position = [100 100 1000 800];
+newcolors = ["#0072BD","#D95319","#77AC30"];
+colororder(newcolors);
+sgtitle('Accidents per year, estimated intensity and breakpoints for different \Psi, with d = 3')
+%
+psi = 2;
+N = 100000;
+burnin = 0.2*N;
+
+for d = 2:1:5
+    
+    %d = 3;
+    rho = 0.5;
+    [theta, lambda, t] = get_priors(d,psi);
+    [theta, lambda, t] = get_posteriors(rho,theta,lambda,t,T,d,psi);
+
+
+% Plotting
+    start_year = 1658;
+    end_year = 1980;
+    years = round(linspace(start_year,end_year,(end_year-start_year)));
+    
+    y = zeros(length(years),1);
+    L = zeros(length(years),1);
+    breakpoints = nan(length(years),1);
+    breakpoint_counter = 1;
+    
+    pripost = 2; % change to 1 if prior, 2 if posterior
+                 % change to t(2,...) when posterior fixed
+    
+    for i = 1:length(years)
+        for j = 1:length(T)
+            if years(i)-1 < T(j) && T(j) < years(i)+1
+                y(i) = y(i)+1;
+            end
+        end
+        if years(i)-1 < t(pripost,breakpoint_counter) && t(pripost,breakpoint_counter) < years(i)+1
+            breakpoints(i) = 0;
+            breakpoint_counter = min(d+1,breakpoint_counter + 1);
+        end
+        L(i) = lambda(pripost, breakpoint_counter-1);
+    end
+    %
+    y(y == 0) = nan;
+    subplot(2,2,d-1)
+    bar(years,y)
+    ylabel("Number of accidents")
+    xlabel("Year")
+    hold on
+    stem(years,breakpoints, 'filled')
+    hold on
+    yyaxis right
+    plot(years,L,"LineWidth",1.5)
+    axis([start_year end_year 0 10])
+    ylabel("Estimated intensity")
+    legend(["Accidents", "Break", "Lambda"],"Location","northwest")
+    title("d = " + d + ", \Psi = " + psi)
+end
+
+filename = "all_psi_d_" + d + "_rho_" + rho;
+path_prefix = "figs/";
+path = path_prefix + filename + ".png";
+saveas(gcf,path)
+

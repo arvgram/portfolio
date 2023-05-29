@@ -1,0 +1,369 @@
+clear; clc;
+close all;
+
+load Project/latest_version/projDatafiles/utempSla_9395.dat
+load Project/latest_version/projDatafiles/ptstu93.mat
+load Project/latest_version/projDatafiles/ptstu94.mat
+load Project/latest_version/projDatafiles/ptstu95.mat
+
+load Project/latest_version/projDatafiles/ptvxo93.mat
+load Project/latest_version/projDatafiles/ptvxo94.mat
+load Project/latest_version/projDatafiles/ptvxo95.mat
+
+load Project/latest_version/projDatafiles/tid93.mat
+load Project/latest_version/projDatafiles/tid94.mat
+load Project/latest_version/projDatafiles/tid95.mat
+%%
+T = vertcat(tid93, tid94, tid95);
+utetempstur = vertcat(ptstu93,ptstu94,ptstu95);
+utetempvxo = vertcat(ptvxo93,ptvxo94,ptvxo95);
+
+% since they differ in length we zeropad to make ends meet
+zeropad = zeros(1,length(utetempstur)-length(utetempvxo))';
+utetempvxo = vertcat(utetempvxo,zeropad);
+shift = 2;
+% We begin by making one dataset with time and temperature data, and alining
+% them 
+big = horzcat(utetempvxo,utetempstur, utempSla_9395, T(1:length(utempSla_9395),:)); %Ok since they start on same date
+
+% Data validation check
+
+% we check that the year time stamp (which is present in both sets) aline
+assert(mean(big(:,1+shift) == big(:,5+shift)) == 1)
+% we check that the hourly time stamp also aline
+assert(mean(big(:,2+shift) == big(:,8+shift)) == 1)
+% if both of the above values are 1 then our concatenation is successful
+
+%%
+% removing unnecessary columns
+new_big = big(:,[1 2 1+shift 2+shift 3+shift]);
+
+% using table format instead, for less cumbersome handling 
+df = array2table(new_big, 'VariableNames',{'tp_vxo','tp_stu','year','hour','t_sla'});
+
+% making a date-time-table instead for easier represenation 
+start_time = '1-Jan-1993';
+t = datetime(start_time):hours(1):datetime(start_time) + hours(length(df.t_sla)-1);
+df.('time') = t';
+
+% removing the first samples that are from before start of measurements 
+df = df(6803:end, :);
+%% evaluating data 
+figure(1)
+plot(df.tp_vxo);
+hold on
+plot(df.t_sla);
+
+figure(2)
+plot(df.tp_stu);
+hold on
+plot(df.t_sla);
+
+%% evaluating data for 10 weeks in the middle of the dataset
+for name = ["t_sla", "tp_stu", "tp_vxo"]
+    figure
+    start = length(df.(name)) / 2;
+    ed = start + 10*24*7 ;
+    plot(df.time(start:ed), df.(name)(start:ed))
+    title(name)
+end 
+
+
+% the once-a-day-at-23:00-o'clock-zero-value is evident and needs to be
+% handled
+
+
+%% handling the 23 oclock-thing by setting it as NaN and fill them as linear intepolation
+idx = df.hour == 23;
+df.t_sla(idx) = NaN; 
+df.t_sla= fillmissing(df.t_sla,'linear'); 
+
+%checking that we caught all NaN
+assert(sum(isnan(df.t_sla))==0)
+%%
+plot(df.time, df.t_sla)
+
+% we can still see that some missing values occur, for example if the
+% temperature is identically 0 at 14:00 in august. We draw the conclusion
+% that all missing measurements have been handled as setting the value to
+% zero.
+%% Handling missing values 
+% We figure that the best way is to handle all identically zero values as 
+% a linear interpolation between previous and next value. This will not 
+% disturb the winter temperature that actually are zero too much since we 
+% measure with one decimal and they will probably be close to their acutal
+% value after interpolation
+
+idx = df.t_sla == 0;
+df.t_sla(idx) = NaN; 
+df.t_sla = fillmissing(df.t_sla,'linear'); 
+assert(sum(isnan(df.t_sla))==0)
+
+plot(df.time,df.t_sla)
+
+% this looks good!
+
+%%
+testdf = df;
+interpolated = mod(testdf.hour,3) ~= 1;
+testdf.tp_vxo(interpolated) = nan;
+testdf.tp_stu(interpolated) = nan;
+testdf.tp_stu = fillmissing(testdf.tp_stu,"previous");
+testdf.tp_vxo = fillmissing(testdf.tp_vxo,"previous");
+
+shift = 3;
+shiftedStu = testdf.tp_stu(1+shift:end);
+shiftedVxo = testdf.tp_vxo(1+shift:end);
+
+plot(testdf.time(12000:12500),testdf.t_sla(12000:12500))
+hold on
+plot(testdf.time(12000:12500),df.tp_stu(12000:12500))
+
+legend(["Svedala temp", "Sturup pred shifted"])
+
+%%
+crosscorr(shiftedStu,testdf.t_sla, NumLags = 40)
+
+%%
+zeropad = zeros(length(df.t_sla)-length(shiftedStu),1);
+shiftedVxo = vertcat(shiftedVxo,zeropad);
+shiftedStu = vertcat(shiftedStu,zeropad);
+df.shifted_stu = shiftedStu;
+df.shifted_vxo = shiftedVxo;
+%% evalute the correlation between our to exogenous in order to find best
+figure 
+subplot(211)
+crosscorr(df.shifted_stu,df.t_sla, NumLags = 40)
+subplot(212)
+crosscorr(df.shifted_vxo,df.t_sla, NumLags = 40)
+
+%%
+diffCorr = crosscorr(df.shifted_stu,df.t_sla, NumLags = 40)-crosscorr(df.shifted_vxo,df.t_sla, NumLags = 40);
+stem(diffCorr);
+
+%Note that sturup has stronger correlation compared to växjö, as expected
+%due to gEoGraPhY
+
+
+%% We do the same splitting scheme
+
+start_date = '1994-09-01';
+start_train = find(df.time == start_date);
+end_train= start_train + 10*24*7;
+
+start_val = end_train;
+end_val = end_train + 2*24*7;
+
+start_test = end_train + 20*24*7;
+end_test = start_test + 2*24*7;
+
+
+df_train = df(start_train:end_train,:);
+df_val = df(start_val:end_val,:);
+df_test = df(start_test:end_test,:); %Never touch this :)
+
+figure
+
+subplot(211)
+plot(df_train.time, df_train.t_sla)
+hold on
+plot(df_val.time, df_val.t_sla)
+plot(df_test.time, df_test.t_sla)
+title('SVEDALA')
+legend(["Train", "Validation", "Test"])
+
+subplot(212)
+
+plot(df_train.time, df_train.shifted_stu)
+hold on
+plot(df_val.time, df_val.shifted_stu)
+plot(df_test.time, df_test.shifted_stu)
+title('STURUP')
+
+legend(["Train", "Validation", "Test"])
+
+%% we now want to model the input as a process
+plot(df_train.time, df_train.shifted_stu)
+% looks like we need a differenenffieation
+
+%% differentiation
+detrender = [1 -1];
+detrended = filter(detrender, 1, df_train.shifted_stu);
+detrended = detrended(length(detrender):end);
+plot(df_train.time(length(detrender):end),detrended)
+
+%%
+starti = 8890;
+stopi = starti+100;
+plot(df.time(starti:stopi),df.t_sla(starti:stopi))
+%%
+checkACFnTACF(detrended)
+
+%% differentiation 
+% trying to use an estimated A1-parameter to see how relevant a hard coded
+% detrender is 
+detrender = arx(df_train.shifted_stu, 1);
+detrended = filter(detrender.a, 1, df_train.shifted_stu);
+detrended = detrended(length(detrender.a):end);
+
+plot(df_train.time(length(detrender.a):end),detrended)
+disp("The estimated detrender-variable is: " + detrender.a(2))
+% since it as almost 1 we use hard detrender instead
+
+
+%% 
+plotACFnPACF(detrended, 50, 'STURUP', 0.05)
+
+%% Hard deseasoning
+season = 24;
+deseasoner = [1 zeros(1, season-1) -1];
+deseasoned = filter(deseasoner,1, detrended);
+plot(deseasoned)
+%% 
+plotACFnPACF(deseasoned, 50, 'STURUP', 0.05);
+
+%%
+A = [1 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0];
+C = [1 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0];
+
+
+whitening_model = estimateARMA(detrended,A, C, 'AR(2)', 59);
+
+
+%%
+whitening_model.a = conv(detrender,whitening_model.a);
+present(whitening_model)
+
+
+%%
+r = resid(df_train.shifted_stu, whitening_model);
+whitenessTest(r.OutputData)
+
+%%
+epst = resid(whitening_model, df_train.t_sla);
+wt = resid(whitening_model, df_train.shifted_stu);
+n = length(df_train.t_sla);
+M=40;
+stem(-M:M,crosscorr(wt.OutputData,epst.OutputData,M));
+title('Cross correlation function');
+xlabel('Lag')
+hold on
+plot(-M:M, 2/sqrt(n)*ones(1,2*M+1)) 
+plot(-M:M, -2/sqrt(n)*ones(1,2*M+1))
+hold off
+
+%%
+close all
+d = 0;
+r = 2;
+s = 0;
+C1 = [1 0.5 0 0 0 0 zeros(1,17) 0.5 0.3 0];     % C-polynomial
+A1 = [1/0.2 1 0 1 0 0 zeros(1,17) 1 1 0].*0.2;  % D-polynomial
+B =  [zeros(1,d) 1 ones(1,s)]*0.5;              % B-polynomial
+A2 = [1/0.6 ones(1,r)].*0.6;                    % F-polynomial
+y = df_train.t_sla;
+x = df_train.shifted_stu;
+
+[foundModel, ey, acfEst, pacfEst ] = estimateBJ(y,x,C1,A1,B,A2,'Hello', 40);
+
+figure
+crosscorr(x, ey)
+save Project/latest_version/models/model_b foundModel
+
+
+%% Lets do some prediction with this model
+close all
+y = df.t_sla;
+x = df.tp_stu;
+time = df.time;
+
+%Reformulate as an ARMAX process
+K_a = conv(finalmodel.D, finalmodel.F); %A1A2
+K_b = conv(finalmodel.D, finalmodel.B); %A1B
+K_c = conv(finalmodel.F, finalmodel.C); %A2C
+
+% Specify when training, validation, test starts and end
+
+%Training
+train_start = find(df.time == df_train.time(1));
+train_end = find(df.time == df_train.time(end));
+
+%Validation
+val_start = find(df.time == df_val.time(1));
+val_end = find(df.time == df_val.time(end));
+
+%Test
+test_start = find(df.time == df_test.time(1));
+test_end = find(df.time == df_test.time(end));
+
+% Do a 1 and 9 step prediction on all data
+[y_hat_1, x_hat_1] = predictARMAX(K_a,K_b,K_c,y,x,1);
+[y_hat_9, x_hat_9] = predictARMAX(K_a,K_b,K_c,y,x,9);
+
+%Fetch respective prediction
+%modelling
+y_model = y(train_start:train_end);
+yhat_model_1 = y_hat_1(train_start:train_end);
+yhat_model_9 = y_hat_9(train_start:train_end);
+
+x_model = x(train_start:train_end);
+xhat_model_1 = x_hat_1(train_start:train_end);
+xhat_model_9 = x_hat_9(train_start:train_end);
+
+%Validation
+y_val = y(val_start:val_end);
+yhat_val_1 = y_hat_1(val_start:val_end);
+yhat_val_9 = y_hat_9(val_start:val_end);
+
+x_val = x(val_start:val_end);
+xhat_val_1 = x_hat_1(val_start:val_end);
+xhat_val_9 = x_hat_9(val_start:val_end);
+
+% test
+y_test = y(test_start:test_end);
+yhat_test_1 = y_hat_1(test_start:test_end);
+yhat_test_9 = y_hat_9(test_start:test_end);
+
+x_test = x(test_start:test_end);
+xhat_test_1 = x_hat_1(test_start:test_end);
+xhat_test_9 = x_hat_9(test_start:test_end);
+
+
+resid_1_model = y_model - yhat_model_1;
+resid_9_model = y_model - yhat_model_9;
+
+resid_1_val = y_val - yhat_val_1;
+resid_9_val = y_val - yhat_val_9;
+
+resid_1_test = y_test - yhat_test_1;
+resid_9_test = y_test - yhat_test_9;
+
+%figure(1)
+%plot(df_train.time, resid_1_model)
+%hold on
+%plot(df_train.time, resid_9_model)
+%title("Modelling data")
+%legend(["One step resiudal", "Nine step residual"])
+disp("Modelling data Residual Variance 1 step: " + var(resid_1_model))
+disp("Modelling data Residual Variance 9 step: " + var(resid_9_model))
+disp("-------------------")
+
+%figure(2)
+%plot(df_val.time, resid_1_val)
+%hold on
+%plot(df_val.time, resid_9_val)
+%title("Validation data")
+%legend(["One step resiudal", "Nine step residual"])
+disp("Validation Residual Variance 1 step: " + var(resid_1_val))
+disp("Validation Residual Variance 9 step: " + var(resid_9_val))
+disp("-------------------")
+
+disp("Test Residual Variance 1 step: " + var(resid_1_test))
+disp("Test Residual Variance 9 step: " + var(resid_9_test))
+disp("-------------------")
+
+%%
+whitenessTest(resid_1_test)
+
+
+
