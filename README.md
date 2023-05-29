@@ -12,26 +12,27 @@ I have worked on a project called "Predicting Forex Rates using NLP" which explo
 ## University Projects
 In this section, I have included a selection of projects from my university studies. These projects cover a wide range of topics, between object oriented programming to financial economics. Below is a brief overview of some of the key courses I've completed and the corresponding projects I've included:
 
-### Machine Learning
+### [Machine Learning](https://github.com/arvgram/portfolio/tree/main/University%20projects/Machine%20learning)
 In this course, I gained valuable insights into the field of machine learning and developed a strong foundation in its concepts and techniques. All of the laborations were implementing using MATLAB, which helped me gain insights on what happens under the hood of a shiny Python API. Some notable projects from this course include:
 
-- **Assignment 2**: SVM, PCA and k-means clustering on MNIST
+- **[Assignment 2](https://github.com/arvgram/portfolio/tree/main/University%20projects/Machine%20learning/Assignment%202)**: SVM, PCA and k-means clustering on MNIST
   Description to be added
 
-- **Assignment 3**: Neural Networks
+- **[Assignment 3](https://github.com/arvgram/portfolio/tree/main/University%20projects/Machine%20learning/Assignment%203)**: Neural Networks
   Description to be added 
 
-### Database Technology
+### [Database Technology](https://github.com/arvgram/portfolio/tree/main/University%20projects/Database%20Technology)
 The database technology course provided me with a comprehensive understanding of Relational Database Management Systems. We covered topics such as querying, modelling and implementing Relational Databases and REST API:s. 
+<img width="742" alt="er-model-2 1" src="https://github.com/arvgram/portfolio/assets/108921448/87046b59-c08a-4906-b4fb-c8df1b5e1d99">
 
-- **Project**:
+- **[Project](https://github.com/arvgram/portfolio/tree/main/University%20projects/Database%20Technology/Project)**:
   A REST API for a cookie bakery and delivery system. A SQLite-database and a python app.     
 	
 
-### Time Series Analysis
+### [Time Series Analysis](https://github.com/arvgram/portfolio/tree/main/University%20projects/Time%20Series%20Analysis)
 In the time series analysis course, I delved into the intricacies of analysing and modelling time-dependent data. The following projects demonstrate my proficiency in this field:
 
-- **Project**: Temperature modelling
+- **[Project](https://github.com/arvgram/portfolio/tree/main/University%20projects/Time%20Series%20Analysis/Project)**: Temperature modelling
   Description: We modelled the temperature in a Swedish town using ARMA, Box-Jenkins and Kálmán filtering.  
 
 ## Additional Projects
