@@ -12,7 +12,7 @@ In this course, I gained valuable insights into the field of machine learning an
 - **Assignment 2**: SVM, PCA and k-means clustering on MNIST
   Description to be added
 
-- **Project 3**: Neural Networks
+- **Assignment 3**: Neural Networks
   Description to be added 
 
 ### Database Technology
