@@ -5,11 +5,11 @@ Welcome to my portfolio! This repository showcases my work, highlighting my skil
 
 ## [Predicting Forex Rates using NLP](https://github.com/simondanielsson/FinBERT-LSIMF)
 ![modelArchitecture](https://github.com/arvgram/portfolio/assets/108921448/b2afef0c-7340-4d8e-88eb-396aa3ad621e)
-I have conducted research on the use of NLP for market prediction. We explor the use of sentiment analysis on news articles to augment exchange rate predictions. The project is available in a separate repository called [FinBERT-LSIMF](https://github.com/simondanielsson/FinBERT-LSIMF). The report of our work is found in [report](https://github.com/arvgram/portfolio/blob/main/Predicting_Forex_Rates_NLP.pdf).  
+I have conducted research on the use of NLP for market prediction. We explore the use of sentiment analysis on news articles to augment exchange rate predictions. The project is available in a separate repository called [FinBERT-LSIMF](https://github.com/simondanielsson/FinBERT-LSIMF). The report of our work is found in [report](https://github.com/arvgram/portfolio/blob/main/Predicting_Forex_Rates_NLP.pdf).  
 ![moodPlotAnnotated](https://github.com/arvgram/portfolio/assets/108921448/56ccbba8-c948-4b9d-8113-3259d27ca55c)
 
 
-## University Projects
+## [University Projects](https://github.com/arvgram/portfolio/tree/main/University%20projects)
 In this section, I have included a selection of projects from my university studies. These projects cover a wide range of topics, between object oriented programming to financial economics. Below is a brief overview of some of the key courses I've completed and the corresponding projects I've included:
 
 ### [Machine Learning](https://github.com/arvgram/portfolio/tree/main/University%20projects/Machine%20learning)

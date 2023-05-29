@@ -1,0 +1,18 @@
+Welcome to the Schibsted Contextual Team Data Science summer internship take-home assignment!
+
+The goal of this exercise is to reveal underlying patterns in a dataset of images. The dataset has a very specific composition - if you use the right methods it should be possible to clearly reveal this.
+
+You can find the images here:
+https://drive.google.com/file/d/1RD1ra2aaxc484GvqzfjRzNfIspyjtWuG/view?usp=sharing
+
+Feel free to use whichever method you think is suitable, with the following constraints:
+- Use some kind of computer vision analysis to reveal the underlying patterns
+- Present some kind of visualization of your results
+
+You can present results in a notebook, a regular command-line program with associated output plots, or whichever approach you prefer. Please use Python.
+
+Please provide some way of making the analysis reproducible, so that we don't run into problems with software package versions if we try to reproduce your analysis.
+
+Also, please produce a README document explaining your solution.
+
+Good luck!
