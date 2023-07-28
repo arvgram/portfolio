@@ -45,9 +45,6 @@ Apart from my university projects, I have a few smaller private projects.
 ### More coming soon!
 
 ## Contact Information
-Certainly! Here's an updated version of the contact information section with a link to your LinkedIn profile:
-
-## Contact Information
 If you have any questions or would like to get in touch, please feel free to reach out to me. You can contact me via email at [arvid.gramer@gmail.com](mailto:arvid.gramer@gmail.com).
 
 Connect with me on [LinkedIn](https://www.linkedin.com/in/arvid-g-816926114/) to stay updated on my professional journey and explore more of my work.
